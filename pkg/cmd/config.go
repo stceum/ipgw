@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"syscall"
 
 	"github.com/neucn/ipgw/pkg/console"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/term"
 )
 
 var (
@@ -39,8 +41,9 @@ var (
 			},
 			&cli.StringFlag{
 				Name:     "password",
+				Value:	  "",
 				Aliases:  []string{"p"},
-				Required: true,
+				Required: false,
 				Usage:    "`password` for pass.neu.edu.cn",
 			},
 			&cli.StringFlag{
@@ -60,6 +63,14 @@ var (
 			}
 			username := ctx.String("username")
 			password := ctx.String("password")
+			if password == "" {
+			   fmt.Print("Enter Password: ")
+		           bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+			   if err != nil {
+			      return err
+			   }
+			    password = string(bytePassword)
+			}
 			if err = store.Config.AddAccount(
 				username,
 				password,

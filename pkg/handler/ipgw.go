@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -61,8 +61,20 @@ func (h *IpgwHandler) Login(account *model.Account) error {
 		return err
 	}
 
-	if strings.Contains(body, "Arrearage users") {
-		return fmt.Errorf("overdue")
+	type LoginResponse struct {
+		Code     int    `json:"code"`
+		Message  string `json:"message"`
+		Redirect string
+		ID       string
+	}
+	var loginResponse LoginResponse
+	parseLoginResponseErr := json.Unmarshal([]byte(body), &loginResponse)
+	if parseLoginResponseErr != nil {
+		return parseLoginResponseErr
+	}
+
+	if loginResponse.Code != 0 {
+		return errors.New(loginResponse.Message)
 	}
 
 	return h.ParseBasicInfo() // 解析信息
